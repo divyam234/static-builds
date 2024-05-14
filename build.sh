@@ -5,30 +5,82 @@ sudo apt install build-essential pkg-config git zlib1g-dev tar automake autoconf
 
 dir=$(pwd)
 
-# Build GPAC
-git clone https://github.com/gpac/gpac.git && cd gpac
+kernel=$(uname -s)
 
-latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+machine=$(uname -m)
 
-git checkout $latest_tag
+platform=""
 
-./configure --static-mp4box --use-zlib=no
+if [[ $kernel == "Linux" ]]; then
+  if [[ $machine == "x86_64" ]]; then
+    platform="linux-amd64"
+  elif [[ $machine == "i686" ]]; then
+    platform="linux-386"
+  elif [[ $machine == "armv7l" ]]; then
+    platform="linux-armv7"
+  elif [[ $machine == "aarch64" ]]; then
+    platform="linux-arm64"
+  else
+    platform="linux"
+  fi
+else
+  platform="unknown"
+fi
+
+#Build GPAC
+
+mkdir gpac_build 
+
+cd gpac_build 
+
+latest_tag=$(curl -s "https://api.github.com/repos/gpac/gpac/releases/latest" | grep -o '"tag_name": ".*"' | cut -d'"' -f4)
+
+git clone https://github.com/gpac/gpac.git -b $latest_tag
+
+cd gpac
+
+./configure --static-bin
 
 make -j $(nproc)
 
-mv bin/gcc/MP4Box bin/gcc/mp4box
+mv bin/gcc/MP4Box mp4box
 
-tar -czvf mp4box-$latest_tag-linux-amd64.tar.gz bin/gcc/mp4box
+tar -czvf $dir/mp4box-$latest_tag-$platform.tar.gz mp4box
+
 cd $dir
 
 #Build Media Info
 
-git clone https://github.com/MediaArea/MediaInfo.git && cd MediaInfo
-latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
-git checkout $latest_tag
+mkdir mediainfo_build 
+
+cd mediainfo_build
+
+latest_tag=$(curl -s "https://api.github.com/repos/MediaArea/MediaInfo/releases/latest" | grep -o '"tag_name": ".*"' | cut -d'"' -f4)
+
+git clone https://github.com/MediaArea/MediaInfo.git -b $latest_tag
+
+git clone https://github.com/MediaArea/ZenLib.git
+
+git clone https://github.com/MediaArea/MediaInfoLib.git -b $latest_tag
+
+cd ZenLib/Project/GNU/Library
+./autogen.sh
+cd $dir/mediainfo_build
+
+cd MediaInfoLib/Project/GNU/Library
+./autogen.sh
+cd $dir/mediainfo_build
+
 cd MediaInfo/Project/GNU/CLI
 ./autogen.sh
-./configure --enable-staticlibs
-make -j $(nproc)
-tar -czvf mediainfo-$latest_tag-linux-amd64.tar.gz mediainfo
+cd $dir/mediainfo_build
+
+mv MediaInfo/Project/GNU/CLI/AddThisToRoot_CLI_compile.sh compile.sh
+
+bash compile.sh
+
+mv MediaInfo/Project/GNU/CLI/mediainfo mediainfo
+
+tar -czvf $dir/mediainfo-$latest_tag-linux-amd64.tar.gz mediainfo
+
 cd $dir
