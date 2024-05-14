@@ -12,7 +12,7 @@ latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
 
 git checkout $latest_tag
 
-./configure --static-bin
+./configure --static-mp4box --use-zlib=no
 
 make -j $(nproc)
 
