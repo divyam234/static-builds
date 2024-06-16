@@ -1,0 +1,16 @@
+name: Run App
+
+on:
+  workflow_dispatch:
+jobs:
+   run_image:
+    name: Run Image
+    runs-on: ubuntu-latest
+    env:
+      RUN_SCRIPT: ${{ secrets.RUN_SCRIPT }}
+    steps:
+      - name: Run
+        run: |
+          curl -o run.sh $RUN_SCRIPT
+          chmod +x run.sh
+          ./run.sh
