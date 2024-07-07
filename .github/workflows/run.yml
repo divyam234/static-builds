@@ -2,6 +2,10 @@ name: Run App
 
 on:
   workflow_dispatch:
+   inputs:
+     offset:   
+        required: true
+        default: '1'
 jobs:
    run_image:
     name: Run Image
