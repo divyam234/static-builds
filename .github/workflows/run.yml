@@ -12,9 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RUN_SCRIPT: ${{ secrets.RUN_SCRIPT }}
-      GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-      PROXY: ${{ secrets.PROXY }}
       BOT_OFFSET: ${{ github.event.inputs.offset }}
+      TUNNEL_TOKEN: ${{ secrets.TUNNEL_TOKEN }}
     steps:
       - name: Run
         run: |
